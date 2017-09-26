@@ -8,9 +8,10 @@ const int H = 11;
 const int W = 15;
 const int size = 45;
 int count = 0;
-int i = 0;
-bool isObjectTransportToSetka = false;
-bool isBuferEmpty = true;
+int i[3]{ 0 };
+bool isObjectTransportToSetka[3]{ false };
+bool isBuferEmpty[3]{ true };
+
 
 Texture texture, TecRezustor, WireTex;
 
@@ -50,28 +51,37 @@ public:
 	float dX[H*W], dY[H*W];
 
 
-	ELEMENT() {
-		for (int j = 0; j <= 165; j++)
-		{
-			startCoor[j].x = 20;
-			startCoor[j].y = 525;
-			//		count += 50;
-		}
+	ELEMENT(int index) {// schob vidriznyatu elementu
+		//switch (index) {///Debug
+		//case 0:
+		int kdist;
+		if (index == 0) { kdist = 0; }
+		else if (index == 1) { kdist = 50; }
+		else if (index == 2) kdist = 100;
+			for (int j = 0; j <= 165; j++)		//-----------------
+			{									//-----------------
+				startCoor[j].x = 20+kdist;			//initializatio 
+				startCoor[j].y = 525;			//start position
+												//		count += 50;			//-----------------
+			}									//-----------------
 
-		sprite[i].setTexture(texture);
-		sprite[i].setScale(1, 1);
-		sprite[i].setPosition(startCoor[i].x, startCoor[i].y);
-		isBuferEmpty = false;
+			if (index == 0) sprite[i[index]].setTexture(texture);
+			else if(index == 1) sprite[i[index]].setTexture(TecRezustor);
+			else if (index == 2) sprite[i[index]].setTexture(WireTex);
+			sprite[i[index]].setScale(1, 1);
+			sprite[i[index]].setPosition(startCoor[i[index]].x, startCoor[i[index]].y);
+			isBuferEmpty[index] = false;
 
-		for (int j = 0; j <= 165; j++)
-		{
-			isMove[j] = false;
-		}
+			for (int j = 0; j <= 165; j++)
+			{
+				isMove[j] = false;
+			}
+
 	}
 
-	void MousePressed(Vector2i pixelPos)
+	void MousePressed(Vector2i pixelPos, int index)
 	{
-		for (int j = 0; j <= i; j++)
+		for (int j = 0; j <= i[index]; j++)
 		{
 			if (sprite[j].getGlobalBounds().contains(pixelPos.x, pixelPos.y))//
 			{
@@ -84,9 +94,9 @@ public:
 		}
 	}
 
-	void MouseReleazed(Vector2i pixelPos)
+	void MouseReleazed(Vector2i pixelPos, int index)
 	{
-		for (int j = 0; j <= i; j++)
+		for (int j = 0; j <= i[index]; j++)
 		{
 			isMove[j] = false;
 
@@ -96,15 +106,16 @@ public:
 				for (int countX = 0; countX < size*W; countX += size)
 				{
 					if (IntRect(countX, countY, size, size).contains(pixelPos.x, pixelPos.y) &&
-						isClicked[j] && sprite[j].getGlobalBounds().contains(pixelPos.x, pixelPos.y))
+						isClicked[j]&& sprite[j].getGlobalBounds().contains(pixelPos.x, pixelPos.y))
 					{
-						if (startCoor[j].x == 20 && startCoor[j].y == 525) isBuferEmpty = true; //bufer pusteyet
-						else isBuferEmpty = false;
+						if ( (startCoor[j].x == 20 && startCoor[j].y == 525) || (startCoor[j].x == 20+50 && startCoor[j].y == 525) || (startCoor[j].x == 20+100 && startCoor[j].y == 525) ) 
+							isBuferEmpty[index] = true; //bufer pusteyet
+						else isBuferEmpty[index] = false;
 
 						startCoor[j].x = countX;
 						startCoor[j].y = countY;
 						isClicked[j] = false;
-						isObjectTransportToSetka = true; //yakcho sprite peremistuvsya z bufera
+						isObjectTransportToSetka[index] = true; //yakcho sprite peremistuvsya z bufera
 
 						break;
 					}
@@ -114,10 +125,10 @@ public:
 	}
 
 
-	void update(Vector2i pixelPos)
+	void update(Vector2i pixelPos, int index)
 	{
-		std::cout << i;
-		for (int j = 0; j <= i; j++)
+		//std::cout << i;
+		for (int j = 0; j <= i[index]; j++)
 		{
 			if (isMove[j])
 			{
@@ -150,9 +161,10 @@ int main()
 	initialization(); // initi. texture
 
 
-	ELEMENT lampa;// = new ELEMENT[300]; ///
-				  //	ELEMENT rezustor(TecRezustor);
-				  //	ELEMENT wire(WireTex);
+	ELEMENT lampa(0);// = new ELEMENT[300]; ///
+	ELEMENT rezustor(1);
+	ELEMENT wire(2);
+	//	ELEMENT wire(WireTex);
 
 	Vector2i pixelPos;		// mouse Position
 							//test
@@ -173,27 +185,51 @@ int main()
 			//LMB Pressed
 			if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
 			{
-				lampa.MousePressed(pixelPos);				//call F in class
-															//				rezustor.MousePressed(pixelPos);
-															//				wire.MousePressed(pixelPos);
+				lampa.MousePressed(pixelPos, 0);				//call F in class
+				rezustor.MousePressed(pixelPos, 1);
+				wire.MousePressed(pixelPos, 2);
+				//				rezustor.MousePressed(pixelPos);
+				//				wire.MousePressed(pixelPos);
 			}
 
 			if (event.type == sf::Event::MouseButtonReleased && event.mouseButton.button == sf::Mouse::Left)
 			{
 
 
-				lampa.MouseReleazed(pixelPos);				//call F in class
+				lampa.MouseReleazed(pixelPos, 0);				//call F in class
+				rezustor.MouseReleazed(pixelPos, 1);
+				wire.MouseReleazed(pixelPos, 2);
 
-				if (isObjectTransportToSetka && isBuferEmpty) // Create new sprite if peremistuvsya z bufera
+				if (isObjectTransportToSetka[0] && isBuferEmpty[0]) // Create new sprite if peremistuvsya z bufera	///Debug
 				{
-					i++;										//dodayem new element
+					i[0]++;										//dodayem new element
 																//X += 50;
-					lampa.sprite[i].setTexture(texture);
-					lampa.sprite[i].setPosition(lampa.startCoor[i].x, lampa.startCoor[i].y);// 20 525
+					lampa.sprite[i[0]].setTexture(texture);
+					lampa.sprite[i[0]].setPosition(lampa.startCoor[i[0]].x, lampa.startCoor[i[0]].y);// 20 525
 
-					isBuferEmpty = false;
-					isObjectTransportToSetka = false;
+					isBuferEmpty[0] = false;
+					isObjectTransportToSetka[0] = false;
+				}
+				if (isObjectTransportToSetka[1] && isBuferEmpty[1]) // Create new sprite if peremistuvsya z bufera	///Debug
+				{
+					i[1]++;										//dodayem new element
+																//X += 50;
+					rezustor.sprite[i[1]].setTexture(TecRezustor);
+					rezustor.sprite[i[1]].setPosition(rezustor.startCoor[i[1]].x, rezustor.startCoor[i[1]].y);// 20 525
 
+					isBuferEmpty[1] = false;
+					isObjectTransportToSetka[1] = false;
+				}
+
+				if (isObjectTransportToSetka[2] && isBuferEmpty[2]) // Create new sprite if peremistuvsya z bufera	///Debug
+				{
+					i[2]++;										//dodayem new element
+																//X += 50;
+					wire.sprite[i[2]].setTexture(WireTex);
+					wire.sprite[i[2]].setPosition(wire.startCoor[i[2]].x, wire.startCoor[i[2]].y);// 20 525
+
+					isBuferEmpty[2] = false;
+					isObjectTransportToSetka[2] = false;
 				}
 				//				rezustor.MouseReleazed(pixelPos);
 				//				wire.MouseReleazed(pixelPos);
@@ -204,9 +240,10 @@ int main()
 		//KOD
 		//		position = Mouse::getPosition(window);
 
-		lampa.update(pixelPos);				//peremichae object za mushkoy
-											//		rezustor.update(pixelPos);
-											//		wire.update(pixelPos);
+		lampa.update(pixelPos, 0);//peremichae object za mushkoy
+		rezustor.update(pixelPos, 1);
+		wire.update(pixelPos, 2);
+		//		wire.update(pixelPos);
 
 
 		window.clear(Color::White);
@@ -224,71 +261,23 @@ int main()
 				rectangle.setPosition(j * size, i * size);
 				window.draw(rectangle);
 			}
-		//Etest
-		//		window.draw(rezustor.sprite);
 
-		for (int j = 0; j <= i; j++)
+		for (int j = 0; j <= i[0]; j++)
 		{
 			window.draw(lampa.sprite[j]);
 		}
+		for (int j = 0; j <= i[1]; j++)
+		{
+			window.draw(rezustor.sprite[j]);
+		}
+		for (int j = 0; j <= i[2]; j++)
+		{
+			window.draw(wire.sprite[j]);
+		}
 
-		//	window.draw(lampa.sprite);
-		//window.draw(lampa.sprite);
 
-		//		window.draw(wire.sprite);
 		window.display();
 	}
 
 	return 0;
 }
-
-
-
-
-
-/*
-#include <SFML/Graphics.hpp>
-#include <iostream>
-using namespace sf;
-int x = 0, y = 0, i = 0;
-int main()
-{
-RenderWindow window(sf::VideoMode(800, 600), "Drag & Drop");
-Texture texture;
-texture.loadFromFile("images/rezustor.png");
-Sprite *s = new Sprite[3000000];
-s[i].setTexture(texture);
-s[i].setPosition(x, y);
-i++;
-
-x += 50;
-y += 50;
-while (window.isOpen())
-{
-Event event;
-while (window.pollEvent(event))
-{
-if (event.type == Event::Closed)
-window.close();
-if (event.type == Event::MouseButtonPressed && event.mouseButton.button == Mouse::Left)
-{
-std::cout << "isClicked\n";
-//Sprite s[];
-s[i].setTexture(texture);
-s[i].setPosition(x, y);
-i++;
-x += 50;
-y += 50;
-}
-}
-
-window.clear(Color::White);
-for (int j = 0; j < i; j++)
-{
-window.draw(s[j]);
-}
-window.display();
-}
-return 0;
-}
-*/
